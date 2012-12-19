@@ -1,6 +1,8 @@
 <?php
 
-Yii::import('ext.mail.*');
+Yii::setPathOfAlias('mail', __DIR__);
+Yii::import('mail.*');
+
 /**
  * YiiMail class file.
  *
