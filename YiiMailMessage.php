@@ -155,13 +155,16 @@ class YiiMailMessage extends CComponent {
 				$controller = new CController('YiiMail');
 			}
 
-			// renderPartial won't work with CConsoleApplication, so use
-			// renderInternal - this requires that we use an actual path to the
-			// view rather than the usual alias
-			$viewPath = Yii::getPathOfAlias(Yii::app()->mail->viewPath . '.' . $this->view) . '.php';
-			// Путь к файлу с учётом языка (русские в подпапке "ru")
-			$viewPath = Yii::app()->findLocalizedFile($viewPath);
-			$body     = $controller->renderInternal($viewPath, array_merge($body, ['mail' => $this]), true);
+			$viewData = array_merge($body, ['mail' => $this]);
+
+			if (/** @var IViewRenderer $viewRenderer */ $viewRenderer = Yii::app()->getComponent('viewRenderer')) {
+				$viewPath = Yii::getPathOfAlias(Yii::app()->mail->viewPath . '.' . $this->view) . $viewRenderer->fileExtension;
+				$body = $viewRenderer->renderFile($controller, $viewPath, $viewData, true);
+			} else {
+				$viewPath = Yii::getPathOfAlias(Yii::app()->mail->viewPath . '.' . $this->view) . '.php';
+				$viewPath = Yii::app()->findLocalizedFile($viewPath);
+				$body     = $controller->renderInternal($viewPath, $viewData, true);
+			}
 		}
 		return $this->message->setBody($body, $contentType, $charset);
 	}
